@@ -1,0 +1,95 @@
+#!/bin/sh
+#
+# @name Capstone Peregrine
+#
+# @type VTOL Tiltrotor
+# @class VTOL
+#
+# @maintainer Andreas Antener <andreas@uaventure.com>
+#
+# @output MAIN1 Motor right
+# @output MAIN2 Motor left
+# @output MAIN3 Motor back
+# @output MAIN4 Tilt servo back
+# @output MAIN5 Tilt servo right
+# @output MAIN6 Tilt servo left
+# @output MAIN7 Elevon right
+# @output MAIN8 Elevon left
+#
+# @board px4_fmu-v2 exclude
+# @board intel_aerofc-v1 exclude
+# @board bitcraze_crazyflie exclude
+#
+
+. ${R}etc/init.d/rc.vtol_defaults
+
+export PX4_HOME_ALT=5
+
+if [ $AUTOCONF = yes ]
+then
+
+
+	param set-default CBRK_AIRSPD_CHK 162128            #Circuit breaker for airspeed sensor. Setting this parameter to 162128 will disable the check for an airspeed sensor.
+
+	param set-default FW_ARSP_MODE 1                    #Airspeed mode, this parameter can be used to enable flying without an airspeed reading. Value setting: 0: Normal (use airspeed if available) && 1: Airspeed disabled
+
+	param set-default FW_L1_PERIOD 20                   #This is the L1 distance and defines the tracking point ahead of the aircraft its following. A value of 18-25 meters works for most aircraft. Shorten slowly during tuning until response is sharp without oscillation
+	param set-default FW_MAN_R_MAX 50                   #Max manual roll in degrees.
+	param set-default FW_ACRO_X_MAX   270               #This is the rate the controller is trying to achieve if the user applies full roll stick input in acro mode. [units degrees]
+	param set-default FW_ACRO_Y_MAX   270               #This is the body y rate the controller is trying to achieve if the user applies full pitch stick input in acro mode. [units degrees]
+	param set-default FW_ACRO_Z_MAX   180               #This is the body z rate the controller is trying to achieve if the user applies full yaw stick input in acro mode. [units degrees]
+	param set-default FW_PR_FF    0.5                   #Pitch rate feed forward. [Units, %/rad/s]
+	param set-default FW_PR_P 0.08                      #Pitch rate proportional gain. [Units, %/rad/s]
+	param set-default FW_PSP_OFF  5                     #Pitch setpoint offset (pitch at level flight). [units, deg]
+	param set-default FW_P_LIM_MAX    30                #The maximum positive pitch the controller will output. [Units, deg]
+	param set-default FW_P_LIM_MIN    -30               #The minimum negative pitch the controller will output. [unitsm deg]
+	param set-default FW_P_RMAX_NEG   60                #This limits the maximum pitch down up angular rate the controller will output. [units, deg/s]
+	param set-default FW_P_RMAX_POS   60                #This limits the maximum pitch up angular rate the controller will output. [unit, deg/s]
+	param set-default FW_RR_FF    0.33                  #Roll rate feed forward, [unit, %/rad/s]
+	param set-default FW_RR_P 0.11                      #Roll rate proportional Gain, [unit, %/rad/s]
+	param set-default FW_YR_FF    0.3                   #Yaw rate feed forward, [units, %/rad/s]
+	param set-default FW_YR_P 0.05                      #Yaw rate proportional gain, [units, %/rad/s]
+
+	param set-default MC_PITCHRATE_D  0.003             #Pitch rate differential gain. Small values help reduce fast oscillations. If value is too big oscillations will appear again.
+	param set-default MC_PITCHRATE_P  0.15
+	param set-default MC_PITCH_P  6                     #Pitch proportional gain. [unit, Hz]
+	param set-default MC_ROLLRATE_D   0.003             #Roll rate differential gain. Small values help reduce fast oscillations. If value is too big oscillations will appear again.
+	param set-default MC_ROLLRATE_P   0.15              #Roll rate proportional gain
+	param set-default MC_ROLL_P   6                     #Roll proportional gain. [Unit, Hz]
+	param set-default MC_YAWRATE_MAX  120               #Max yaw rate. [Units, deg/s]
+	param set-default MC_YAWRATE_P    0.27              #Yaw rate proportional
+	param set-default MC_YAW_P    2.5                   #Yaw proportional gain, [Hz]
+
+	param set-default MC_YAWRATE_P 0.3                  #Yaw rate proportional gain
+	param set-default MPC_LAND_SPEED 1.2                #Landing descend rate [unit, m/s]
+	param set-default MPC_TKO_SPEED 2.5                 #Takeoff climb rate, [unit, m/s]
+	param set-default MPC_Z_VEL_MAX_UP 3                #Maximum vertical ascent velocity, in AUTO mode and endpoint for stabilized modes. [unit, m/s]
+
+	param set-default PWM_MAIN_RATE 400                 #PWM main output frequency. Set to 400 for industry default or 1000 for high frequency ESCs. Set to 0 for 	Oneshot125. [Units, Hz]
+
+	param set-default SENS_BOARD_ROT 8                  #This parameter defines the rotation of the FMU board relative to the platform.
+
+	param set-default VT_B_TRANS_DUR  1                 #Duration of a back transition, [unit, sec]
+	param set-default VT_F_TRANS_DUR  1.2               #Duration of a front transition, [unit, sec]
+	param set-default VT_F_TR_OL_TM   4                 #The duration of the front transition when there is no airspeed feedback available. [unit, sec]
+	param set-default VT_FW_DIFTHR_EN 1                 #Differential thrust in forwards flight. Set to 1 to enable differential thrust in fixed-wing flight.
+	param set-default VT_FW_DIFTHR_SC 0.                #Differential thrust scaling factor. Specifies how the yaw input gets mapped to differential thrust in forwards flight.
+	param set-default VT_FW_MOT_OFFID 0                 #The channel number of motors that must be turned off in fixed wing mode
+	param set-default VT_FW_PERM_STAB 0                 #Permanent stabilization in fw mode. If set to one this parameter will cause permanent attitude stabilization in fw mode. This parameter has been introduced for pure convenience sake.
+	param set-default VT_IDLE_PWM_MC 1200               #Idle speed of VTOL when in multicopter mode, [units, us]
+	param set-default VT_MOT_ID 123                     #The channel number of motors which provide lift during hover
+	param set-default VT_TILT_FW  1                     #Forward tilt of the vtol for Fixed-wing (FW) mode set to full forward tilt
+	param set-default VT_TILT_MC  0                     #Forward tilt of the vtol for multicopter (MC) mode set to no forward tilt
+	param set-default VT_TILT_TRANS   0.45              #Percent forward tilt is set during the transition mode from MC to FW mode
+	param set-default VT_TRANS_MIN_TM 1.2               #Minimum time in seconds for front transition.
+	param set-default VT_TRANS_P2_DUR 1.3               #Duration of front transition phase 2, [unit, sec]
+	param set-default VT_ELEV_MC_LOCK 0                 #Lock elevons in multicopter mode. If set to 1 the elevons are locked in multicopter mode
+	param set-default VT_TYPE 1                         #VTOL Type (Tailsitter=0, Tiltrotor=1, Standard=2)
+
+fi
+
+set MAV_TYPE 21                                     #Specifies airframe type, 21: tiltrotor
+
+set MIXER_FILE etc/mixers-sitl/peregrine.main.mix   #Points to the custom made mixer file
+
+set PWM_OUT 1234
